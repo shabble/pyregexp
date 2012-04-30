@@ -141,7 +141,7 @@ If nil, don't limit the number of matches shown in visual feedback."
   :group 'pyregexp)
 
 (defcustom pyregexp-default-replace-preview nil
-  "Preview mode in replacement feedback activated by default? In preview mode, the original is not shown alongside the replacement."
+  "Preview of replacement activated by default? If activated, the original is not shown alongside the replacement."
   :type 'boolean
   :group 'pyregexp)
 
@@ -195,7 +195,7 @@ See also: http://docs.python.org/library/re.html#re.I"
   "Feedback limit currently in use.")
 
 (defvar pyregexp-replace-preview nil
-  "Preview mode in replacement feedback activated?")
+  "Preview of replacement activated?")
 
 (defvar pyregexp-target-buffer nil
   "Buffer to which pyregexp is applied to.")
@@ -337,7 +337,7 @@ See also: http://docs.python.org/library/re.html#re.I"
   (cond ((equal pyregexp-in-minibuffer 'pyregexp-minibuffer-regexp)
 	 (pyregexp-minibuffer-message "C-c ?: help, C-c i: toggle case, C-c m: toggle multiline match of ^ and $, C-c s: toggle dot matches newline, C-c a: toggle show all"))
 	((equal pyregexp-in-minibuffer 'pyregexp-minibuffer-replace)
-	 (pyregexp-minibuffer-message "C-c ?: help, C-c C-c: toggle expression, C-c m: show matches/groups, C-c p: toggle preview mode, C-c a: toggle show all"))))
+	 (pyregexp-minibuffer-message "C-c ?: help, C-c C-c: toggle expression, C-c m: show matches/groups, C-c p: toggle preview, C-c a: toggle show all"))))
 
 ;;; overlay functions
 
