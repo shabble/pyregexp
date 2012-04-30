@@ -140,6 +140,11 @@ If nil, don't limit the number of matches shown in visual feedback."
   :type 'integer
   :group 'pyregexp)
 
+(defcustom pyregexp-default-replace-preview nil
+  "Preview mode in replacement feedback activated by default? In preview mode, the original is not shown alongside the replacement."
+  :type 'boolean
+  :group 'pyregexp)
+
 (defcustom pyregexp-default-regexp-modifiers '(:I nil :M t :S nil :U nil)
   "Modifiers that are applied by default. All modifiers are: '(I M S U).
 See also: http://docs.python.org/library/re.html#re.I"
@@ -188,6 +193,9 @@ See also: http://docs.python.org/library/re.html#re.I"
 
 (defvar pyregexp-feedback-limit nil
   "Feedback limit currently in use.")
+
+(defvar pyregexp-replace-preview nil
+  "Preview mode in replacement feedback activated?")
 
 (defvar pyregexp-target-buffer nil
   "Buffer to which pyregexp is applied to.")
@@ -249,7 +257,12 @@ See also: http://docs.python.org/library/re.html#re.I"
 				      ;; wait for any input to redisplay replacements
 				      (sit-for 100000000 t)
 				      (pyregexp-do-replace-feedback))))
-
+    (define-key map (kbd "C-c p") (lambda ()
+				    (interactive)
+				    (when (equal pyregexp-in-minibuffer 'pyregexp-minibuffer-replace)
+				      (setq pyregexp-replace-preview (not pyregexp-replace-preview))
+				      (pyregexp-do-replace-feedback))))
+    
     (define-key map (kbd "C-c a") 'pyregexp-toggle-limit)
     map)
   "Keymap used while using pyregexp,")
@@ -324,7 +337,7 @@ See also: http://docs.python.org/library/re.html#re.I"
   (cond ((equal pyregexp-in-minibuffer 'pyregexp-minibuffer-regexp)
 	 (pyregexp-minibuffer-message "C-c ?: help, C-c i: toggle case, C-c m: toggle multiline match of ^ and $, C-c s: toggle dot matches newline, C-c a: toggle show all"))
 	((equal pyregexp-in-minibuffer 'pyregexp-minibuffer-replace)
-	 (pyregexp-minibuffer-message "C-c ?: help, C-c C-c: toggle expression, C-c m: show matches/groups, C-c a: toggle show all"))))
+	 (pyregexp-minibuffer-message "C-c ?: help, C-c C-c: toggle expression, C-c m: show matches/groups, C-c p: toggle preview mode, C-c a: toggle show all"))))
 
 ;;; overlay functions
 
@@ -425,11 +438,10 @@ Return t if current line is not the line with the message."
 (defun pyregexp-current-line ()
   (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
-(defun pyregexp-unescape (s &optional newline)
+(defun pyregexp-unescape (s)
   "Replacement strings returned by external script have escaped newlines and backslashes (so that there can be one replacement per line). Unescape to get back original.
 Escaped newlines are only unescaped if newline is not nil."
-  (when newline
-    (setq s (replace-regexp-in-string (regexp-quote "\\n") (regexp-quote "\n") s)))
+  (setq s (replace-regexp-in-string (regexp-quote "\\n") (regexp-quote "\n") s))
   (replace-regexp-in-string (regexp-quote "\\\\") (regexp-quote "\\") s))
 
 (defun pyregexp-parse-matches (s callback)
@@ -450,7 +462,7 @@ The message line is returned.
 			  (end (+ offset (string-to-number (match-string 2)))))
 		      (funcall callback i j begin end)))
 	      (forward-line 1)))
-      (setq message-line (pyregexp-unescape (pyregexp-current-line) t)))
+      (setq message-line (pyregexp-unescape (pyregexp-current-line))))
     message-line))
 
 (defun pyregexp-parse-replace (s)
@@ -470,7 +482,7 @@ and the message line."
 		  (end (+ pyregexp-target-buffer-start (string-to-number (match-string 2)))))
 	      (setq replacements (cons (list replacement begin end i) replacements)))
 	    (forward-line 1))
-      (setq message-line (pyregexp-unescape (pyregexp-current-line) t)))
+      (setq message-line (pyregexp-unescape (pyregexp-current-line))))
     (list replacements message-line)))
 
 ;;; helper functions
@@ -513,7 +525,9 @@ and the message line."
 	  (pyregexp-minibuffer-message msg))))))
 
 (defun pyregexp-format-replace-feedback (original replacement)
-  (format "%s => %s" original replacement))
+  (if pyregexp-replace-preview
+      replacement
+    (format "%s => %s" original replacement)))
 
 (defun pyregexp-do-replace-feedback ()
   "Show visual feedback for replacements."
@@ -551,7 +565,7 @@ and the message line."
 	  (loop for replacement-info in replacements do 
 		(multiple-value-bind (replacement begin end i) replacement-info
 		  ;; replace match
-		  (let ((replacement (pyregexp-unescape replacement t)))
+		  (let ((replacement (pyregexp-unescape replacement)))
 		    (with-current-buffer pyregexp-target-buffer
 		      (save-excursion
 			;; first insert, then delete
@@ -579,6 +593,7 @@ and the message line."
 
 	  (setq pyregexp-feedback-limit pyregexp-default-feedback-limit)
 	  (setq pyregexp-regexp-modifiers (copy-sequence pyregexp-default-regexp-modifiers))
+	  (setq pyregexp-replace-preview pyregexp-default-replace-preview)
 
 	  (save-excursion
 	    ;; deactivate mark so that we can see our faces instead of region-face.
