@@ -111,28 +111,35 @@ elif argv[1] == "replace":
             'i': match_counter[0],
             }
         
-        replacement = (str if PY3 else unicode)(eval(replace, _globals, _locals))
-                
+        if do_eval:
+            replacement = (str if PY3 else unicode)(eval(replace, _globals, _locals))
+        else:
+            replacement = replace
+        
+        # output one replacement per line 
+        if not feedback or match.start() != match.end():
+            sys.stdout.write("%s %s " % match.span())
+            sys.stdout.write(escape(replacement))
+            sys.stdout.write('\n')
+        
         match_counter[0] += 1
-        return replacement
+        
+        # return does not really matter, we are using re.sub only to have a callback on each match.
+        return match.group(0)
 
     try:
-        # output one replacement per line 
-        matches = list(re.finditer(regexp, region))
-        for i, match in enumerate(matches):
-            # output replacement in feedback-mode only when the match length is nonzero
-            if feedback and feedback_limit is not None and i >= feedback_limit:
-                break
-            if not feedback or match.start() != match.end():
-                sys.stdout.write("%s %s " % match.span())
-                sys.stdout.write(escape(re.sub(regexp, eval_replace if do_eval else replace, match.group(0), count=1)))
-                sys.stdout.write('\n')
+        # call eval_replace on each match.
+        # we cannot loop through and replace matches one by one (regexp replacing match.group(0))  because zero-width patterns (i.e. "(A(?=B))") 
+        # are not part of match.group(0) and the regexp would not match again.
+        re.sub(regexp, eval_replace, region, count=feedback_limit if feedback and feedback_limit else 0)
+        # this line is only for counting matches
+        occurences = len(list(re.finditer(regexp, region)))
         if feedback:
-            if matches:
-                message("%d occurences" % len(matches))
+            if occurences:
+                message("%d occurences" % occurences)
             else:
                 message("no match")
         else:
-            message("replaced %d occurences" % len(matches))
+            message("replaced %d occurences" % occurences)
     except Exception as e:
         message("Invalid: %s" % e)
