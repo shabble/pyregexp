@@ -114,8 +114,7 @@ elif argv[1] == "replace":
         if do_eval:
             replacement = (str if PY3 else unicode)(eval(replace, _globals, _locals))
         else:
-            replacement = replace
-        
+            replacement = match.expand(replace)
         # output one replacement per line 
         if not feedback or match.start() != match.end():
             sys.stdout.write("%s %s " % match.span())
