@@ -25,7 +25,7 @@ Add the following code to your init file. Of course you can select your own key.
 (define-key global-map (kbd "C-c r") 'pyregexp-replace)
 ```
 
-To customize, use `M-x customize-group [RET] pyregexp`. You can specify how the Python interpreter is invoked by modifying the `pyregexp-command-prefix` variable. The default is `python ...`.
+To customize, use `M-x customize-group [RET] pyregexp`. You can specify how the Python interpreter is invoked by modifying the `pyregexp-command-prefix` variable. The default is `python /path/to/pyregexp.py`.
 
 ## Examples
 

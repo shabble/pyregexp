@@ -53,7 +53,7 @@
 ;; (define-key global-map (kbd "C-c r") 'pyregexp-replace)
 ;; ----------------------------------------------------------
 ;; To customize, use: M-x customize-group [RET] pyregexp.
-;; You can specify how to invoke the Python interpreter by modifying the pyregexp-command-prefix variable. The default is "python ...".
+;; You can specify how to invoke the Python interpreter by modifying the pyregexp-command-prefix variable. The default is "python /path/to/pyregexp.py".
 ;;
 ;; Execute C-h f "pyregexp-replace" to read more and see examples.
 
