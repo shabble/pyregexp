@@ -613,7 +613,8 @@ and the message line."
 		    (read-from-minibuffer 
 		     " " ;; prompt will be  set in pyregexp-minibuffer-setup 
 		     nil pyregexp-minibuffer-replace-keymap))))
-	  
+	  ;; Successfully got the args, deactivate mark now. If the command was aborted (C-g), the mark (region) would remain active.
+	  (deactivate-mark)
 	  (list pyregexp-regexp-string 
 		pyregexp-replace-string
 		pyregexp-target-buffer-start
